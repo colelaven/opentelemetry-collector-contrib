@@ -6,7 +6,7 @@
 // scenarios — rate limiting, gateway errors, transient failures — by responding
 // with a predefined sequence of HTTP responses, after which it falls back to a
 // default response.
-package retryserver
+package retryserver // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/retryserver"
 
 import (
 	"net/http"
