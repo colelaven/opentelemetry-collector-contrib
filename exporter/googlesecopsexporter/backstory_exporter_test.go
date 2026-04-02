@@ -8,8 +8,6 @@ import (
 	"net"
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadatatest"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/configoptional"
@@ -23,6 +21,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadatatest"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 type mockGRPCServer struct {
@@ -54,6 +55,7 @@ func newMockGRPCServer(t *testing.T, handler mockBatchCreateLogsHandler) (*mockG
 func (s *mockGRPCServer) BatchCreateEvents(_ context.Context, _ *api.BatchCreateEventsRequest) (*api.BatchCreateEventsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "TODO")
 }
+
 func (s *mockGRPCServer) BatchCreateLogs(_ context.Context, req *api.BatchCreateLogsRequest) (*api.BatchCreateLogsResponse, error) {
 	s.requests++
 	return s.handler(req)
@@ -164,7 +166,7 @@ func TestBackstoryAPIExporter(t *testing.T) {
 
 			require.NoError(t, cfg.Validate())
 
-			ctx := context.Background()
+			ctx := t.Context()
 			exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 			require.NoError(t, err)
 			require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))
@@ -202,7 +204,7 @@ func TestBackstoryAPIJSONCredentialsError(t *testing.T) {
 	cfg.Creds = "z"                    // This invalid JSON will cause the token source to error
 	require.NoError(t, cfg.Validate()) // TODO: Validate really should fail immediately when given invalid JSON as credentials
 
-	ctx := context.Background()
+	ctx := t.Context()
 	exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 	require.NoError(t, err)
 
@@ -391,7 +393,7 @@ func TestBackstoryAPIExporterTelemetry(t *testing.T) {
 
 			// Create telemetry for testing metrics
 			testTelemetry := componenttest.NewTelemetry()
-			defer testTelemetry.Shutdown(context.Background())
+			defer testTelemetry.Shutdown(t.Context())
 
 			// Override the client params for testing to we can connect to the mock server
 			secureGPPCClientParams := grpcClientParams
@@ -415,7 +417,7 @@ func TestBackstoryAPIExporterTelemetry(t *testing.T) {
 
 			require.NoError(t, cfg.Validate())
 
-			ctx := context.Background()
+			ctx := t.Context()
 			exp, err := f.CreateLogs(ctx, metadatatest.NewSettings(testTelemetry), cfg)
 			require.NoError(t, err)
 			require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))

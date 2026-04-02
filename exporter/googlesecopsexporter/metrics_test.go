@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 func validCustomerID() string {
@@ -207,8 +208,8 @@ func TestMetricsReporterCollectHostMetrics(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.GreaterOrEqual(t, mr.agentStats.ProcessCpuSeconds, int64(0))
-	assert.Greater(t, mr.agentStats.ProcessMemoryRss, int64(0))
-	assert.Greater(t, mr.agentStats.ProcessUptime, int64(0))
+	assert.Positive(t, mr.agentStats.ProcessMemoryRss)
+	assert.Positive(t, mr.agentStats.ProcessUptime)
 }
 
 func TestMetricsReporterStartAndShutdown(t *testing.T) {
@@ -238,7 +239,7 @@ func TestMetricsReporterStartAndShutdown(t *testing.T) {
 	mu.Lock()
 	count := sendCount
 	mu.Unlock()
-	assert.Greater(t, count, 0, "expected at least one send call")
+	assert.Positive(t, count, "expected at least one send call")
 }
 
 func TestMetricsReporterShutdownWithoutStart(t *testing.T) {
@@ -277,7 +278,7 @@ func TestMetricsReporterStartSendError(t *testing.T) {
 	count := sendCount
 	mu.Unlock()
 	// Should still have attempted to send despite errors
-	assert.Greater(t, count, 0)
+	assert.Positive(t, count)
 }
 
 func TestMetricsReporterConcurrency(t *testing.T) {

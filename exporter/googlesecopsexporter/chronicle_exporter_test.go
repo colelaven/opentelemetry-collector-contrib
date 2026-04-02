@@ -11,9 +11,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadatatest"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/retryserver"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/configoptional"
@@ -23,6 +20,10 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"golang.org/x/oauth2"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadatatest"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/retryserver"
 )
 
 type mockHTTPServer struct {
@@ -188,7 +189,7 @@ func TestChronicleAPIExporter(t *testing.T) {
 			}
 			require.NoError(t, cfg.Validate())
 
-			ctx := context.Background()
+			ctx := t.Context()
 			exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 			require.NoError(t, err)
 			require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))
@@ -318,7 +319,7 @@ func TestChronicleAPIExporterRetrySequences(t *testing.T) {
 			cfg.BackOffConfig.Enabled = false
 			require.NoError(t, cfg.Validate())
 
-			ctx := context.Background()
+			ctx := t.Context()
 			exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 			require.NoError(t, err)
 			require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))
@@ -360,7 +361,7 @@ func TestChronicleAPIJSONCredentialsError(t *testing.T) {
 	cfg.Creds = "z"                    // This invalid JSON will cause the token source to error
 	require.NoError(t, cfg.Validate()) // TODO: Validate really should fail immediately when given invalid JSON as credentials
 
-	ctx := context.Background()
+	ctx := t.Context()
 	exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 	require.NoError(t, err)
 
@@ -397,7 +398,7 @@ func TestChronicleAPIExporterAgentMetrics(t *testing.T) {
 		// Add a stats endpoint handler to the mock server
 		statsMux := http.NewServeMux()
 		statsMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == "POST" && r.URL.Path != "" {
+			if r.Method == http.MethodPost && r.URL.Path != "" {
 				select {
 				case statsReceived <- struct{}{}:
 				default:
@@ -435,7 +436,7 @@ func TestChronicleAPIExporterAgentMetrics(t *testing.T) {
 		cfg.CollectAgentMetrics = true
 		require.NoError(t, cfg.Validate())
 
-		ctx := context.Background()
+		ctx := t.Context()
 		exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 		require.NoError(t, err)
 		require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))
@@ -475,7 +476,7 @@ func TestChronicleAPIExporterAgentMetrics(t *testing.T) {
 		cfg.CollectAgentMetrics = false
 		require.NoError(t, cfg.Validate())
 
-		ctx := context.Background()
+		ctx := t.Context()
 		exp, err := f.CreateLogs(ctx, exportertest.NewNopSettings(typ), cfg)
 		require.NoError(t, err)
 		require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))
@@ -548,7 +549,7 @@ func TestChronicleAPIExporterUploadStatsEvents(t *testing.T) {
 			},
 		}
 
-		err := exp.uploadStatsEvents(context.Background(), request, "test-collector-id")
+		err := exp.uploadStatsEvents(t.Context(), request, "test-collector-id")
 		require.NoError(t, err)
 		require.NotEmpty(t, receivedBody)
 	})
@@ -601,7 +602,7 @@ func TestChronicleAPIExporterUploadStatsEvents(t *testing.T) {
 			},
 		}
 
-		err := exp.uploadStatsEvents(context.Background(), request, "test-collector-id")
+		err := exp.uploadStatsEvents(t.Context(), request, "test-collector-id")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "upload stats to Chronicle")
 	})
@@ -878,7 +879,7 @@ func TestChronicleAPIExporterTelemetry(t *testing.T) {
 
 			// Create telemetry for testing metrics
 			testTelemetry := componenttest.NewTelemetry()
-			defer testTelemetry.Shutdown(context.Background())
+			defer testTelemetry.Shutdown(t.Context())
 
 			f := NewFactory()
 			cfg := f.CreateDefaultConfig().(*Config)
@@ -891,7 +892,7 @@ func TestChronicleAPIExporterTelemetry(t *testing.T) {
 			}
 			require.NoError(t, cfg.Validate())
 
-			ctx := context.Background()
+			ctx := t.Context()
 			exp, err := f.CreateLogs(ctx, metadatatest.NewSettings(testTelemetry), cfg)
 			require.NoError(t, err)
 			require.NoError(t, exp.Start(ctx, componenttest.NewNopHost()))

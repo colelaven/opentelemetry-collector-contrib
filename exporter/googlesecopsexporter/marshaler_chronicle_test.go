@@ -4,18 +4,18 @@
 package googlesecopsexporter
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/metric/noop"
 	"go.uber.org/zap"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
@@ -130,7 +130,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				return plog.NewLogs() // No log records added
 			},
 			expectations: func(t *testing.T, requests map[string][]*api.ImportLogsRequest) {
-				require.Len(t, requests, 0, "Expected no requests due to no log records")
+				require.Empty(t, requests, "Expected no requests due to no log records")
 			},
 		},
 		{
@@ -208,7 +208,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				require.Len(t, requests, 1, "Expected a single batch request")
 				logs := requests["WINEVTLOG"][0].GetInlineSource().Logs
 				require.Len(t, logs, 2, "Expected two log entries in the batch")
-				require.Equal(t, "", logs[0].EnvironmentNamespace)
+				require.Empty(t, logs[0].EnvironmentNamespace)
 				// verify batch source labels
 				require.Len(t, logs[0].Labels, 2)
 				require.Len(t, logs[1].Labels, 2)
@@ -347,7 +347,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs1 := requests["WINEVTLOGS1"][0].GetInlineSource().Logs
 				require.Len(t, logs1, 1, "Expected one log entries in the batch")
 				// verify variables for first log
-				require.Equal(t, logs1[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs1[0].EnvironmentNamespace)
 				require.Len(t, logs1[0].Labels, 2)
 				for key, label := range logs1[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -356,7 +356,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs2 := requests["WINEVTLOGS2"][0].GetInlineSource().Logs
 				require.Len(t, logs2, 1, "Expected one log entries in the batch")
 				// verify variables for second log
-				require.Equal(t, logs2[0].EnvironmentNamespace, "test2")
+				require.Equal(t, "test2", logs2[0].EnvironmentNamespace)
 				require.Len(t, logs2[0].Labels, 2)
 				for key, label := range logs2[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -374,7 +374,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 			logRecords: func() plog.Logs {
 				logs := plog.NewLogs()
 				logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
-				for i := 0; i < 1000; i++ {
+				for range 1000 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr("First log message")
 					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
@@ -394,7 +394,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs1 := requests["WINEVTLOGS1"][0].GetInlineSource().Logs
 				require.Len(t, logs1, 1000, "Expected one thousand log entries in the batch")
 				// verify variables for first log
-				require.Equal(t, logs1[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs1[0].EnvironmentNamespace)
 				require.Len(t, logs1[0].Labels, 2)
 				for key, label := range logs1[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -414,7 +414,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
 				// 8192 * 640 = 5242880
 				body := tokenWithLength(8192)
-				for i := 0; i < 640; i++ {
+				for range 640 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr(string(body))
 					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
@@ -436,7 +436,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs1 := winEvtLogRequests[0].GetInlineSource().Logs
 				require.Len(t, logs1, 320, "Expected 320 log entries in the first batch")
 				// verify variables for first log
-				require.Equal(t, logs1[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs1[0].EnvironmentNamespace)
 				require.Len(t, logs1[0].Labels, 2)
 				for key, label := range logs1[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -445,7 +445,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs2 := winEvtLogRequests[1].GetInlineSource().Logs
 				require.Len(t, logs2, 320, "Expected 320 log entries in the second batch")
 				// verify variables for first log
-				require.Equal(t, logs2[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs2[0].EnvironmentNamespace)
 				require.Len(t, logs2[0].Labels, 2)
 				for key, label := range logs2[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -465,7 +465,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
 				// 8192 * 1280 = 5242880 * 2
 				body := tokenWithLength(8192)
-				for i := 0; i < 1280; i++ {
+				for range 1280 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr(string(body))
 					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
@@ -487,7 +487,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs1 := winEvtLogRequests[0].GetInlineSource().Logs
 				require.Len(t, logs1, 320, "Expected 320 log entries in the first batch")
 				// verify variables for first log
-				require.Equal(t, logs1[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs1[0].EnvironmentNamespace)
 				require.Len(t, logs1[0].Labels, 2)
 				for key, label := range logs1[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -496,7 +496,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs2 := winEvtLogRequests[1].GetInlineSource().Logs
 				require.Len(t, logs2, 320, "Expected 320 log entries in the second batch")
 				// verify variables for first log
-				require.Equal(t, logs2[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs2[0].EnvironmentNamespace)
 				require.Len(t, logs2[0].Labels, 2)
 				for key, label := range logs2[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -505,7 +505,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs3 := winEvtLogRequests[2].GetInlineSource().Logs
 				require.Len(t, logs3, 320, "Expected 320 log entries in the third batch")
 				// verify variables for first log
-				require.Equal(t, logs3[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs3[0].EnvironmentNamespace)
 				require.Len(t, logs3[0].Labels, 2)
 				for key, label := range logs3[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -514,7 +514,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs4 := winEvtLogRequests[3].GetInlineSource().Logs
 				require.Len(t, logs4, 320, "Expected 320 log entries in the fourth batch")
 				// verify variables for first log
-				require.Equal(t, logs4[0].EnvironmentNamespace, "test1")
+				require.Equal(t, "test1", logs4[0].EnvironmentNamespace)
 				require.Len(t, logs4[0].Labels, 2)
 				for key, label := range logs4[0].Labels {
 					require.Equal(t, expectedLabels[key], label.Value, "Expected ingestion label to be overridden by attribute")
@@ -540,7 +540,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 			},
 			expectations: func(t *testing.T, requests map[string][]*api.ImportLogsRequest) {
 				require.Len(t, requests, 1, "Expected one log type")
-				require.Len(t, requests["WINEVTLOG"], 0, "Expected WINEVTLOG log type to have zero requests")
+				require.Empty(t, requests["WINEVTLOG"], "Expected WINEVTLOG log type to have zero requests")
 			},
 		},
 		{
@@ -578,11 +578,11 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 
 				logs1 := winEvtLogRequests[0].GetInlineSource().Logs
 				require.Len(t, logs1, 1, "Expected 1 log entry in the first batch")
-				require.Equal(t, string(logs1[0].Data), "First log message")
+				require.Equal(t, "First log message", string(logs1[0].Data))
 
 				logs2 := winEvtLogRequests[1].GetInlineSource().Logs
 				require.Len(t, logs2, 1, "Expected 1 log entry in the second batch")
-				require.Equal(t, string(logs2[0].Data), "Second log message")
+				require.Equal(t, "Second log message", string(logs2[0].Data))
 			},
 		},
 	}
@@ -594,7 +594,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 			require.NoError(t, err)
 
 			logs := tt.logRecords()
-			requests, _, err := marshaler.MarshalChronicleAPIRawLogs(context.Background(), logs)
+			requests, _, err := marshaler.MarshalChronicleAPIRawLogs(t.Context(), logs)
 			require.NoError(t, err)
 
 			tt.expectations(t, requests)

@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/consumer/consumererror"
@@ -26,6 +24,9 @@ import (
 	"google.golang.org/grpc/credentials/oauth"
 	grpcgzip "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/status"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 type backstoryExporter struct {
@@ -112,7 +113,7 @@ func (exp *backstoryExporter) Shutdown(context.Context) error {
 	}
 	if exp.conn != nil {
 		if err := exp.conn.Close(); err != nil {
-			return fmt.Errorf("connection close: %s", err)
+			return fmt.Errorf("connection close: %w", err)
 		}
 	}
 	return nil

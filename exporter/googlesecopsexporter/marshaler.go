@@ -6,19 +6,20 @@ package googlesecopsexporter
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 
 	json "github.com/goccy/go-json"
-
 	"github.com/google/uuid"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/expr"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl/contexts/ottllog"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/expr"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl/contexts/ottllog"
 )
 
 const (
@@ -303,7 +304,7 @@ func (m *protoMarshaler) getRawField(ctx context.Context, field string, logRecor
 
 	lrExpr, err := expr.NewOTTLLogRecordExpression(field, m.teleSettings)
 	if err != nil {
-		return "", fmt.Errorf("raw_log_field is invalid: %s", err)
+		return "", fmt.Errorf("raw_log_field is invalid: %w", err)
 	}
 	tCtx := ottllog.NewTransformContextPtr(resource, scope, logRecord)
 
@@ -342,9 +343,7 @@ func (m *protoMarshaler) getRawNestedFields(field string, logRecord plog.LogReco
 
 		// If needs to be parsed as JSON
 		if err := json.Unmarshal([]byte(value.AsString()), &jsonMap); err == nil {
-			for k, v := range jsonMap {
-				nestedFields[k] = v
-			}
+			maps.Copy(nestedFields, jsonMap)
 		} else {
 			nestedFields[cleanKey] = value.AsString()
 		}

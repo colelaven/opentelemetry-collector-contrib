@@ -7,11 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 // MarshalChronicleAPIRawLogs marshals the logs into chronicle API request payloads.
@@ -109,5 +110,5 @@ func (m *protoMarshaler) buildChronicleAPIRequest(entries []*api.Log) *api.Impor
 
 func (m *protoMarshaler) buildForwarderString() string {
 	format := "projects/%s/locations/%s/instances/%s/forwarders/%s"
-	return fmt.Sprintf(format, m.cfg.ProjectNumber, m.cfg.Region, m.cfg.CustomerID, string(m.collectorID[:]))
+	return fmt.Sprintf(format, m.cfg.ProjectNumber, m.cfg.Region, m.cfg.CustomerID, string(m.collectorID))
 }

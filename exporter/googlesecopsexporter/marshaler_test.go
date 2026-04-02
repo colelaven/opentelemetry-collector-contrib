@@ -4,7 +4,6 @@
 package googlesecopsexporter
 
 import (
-	"context"
 	"fmt"
 	"math/rand/v2"
 	"strings"
@@ -12,13 +11,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/metric/noop"
 	"go.uber.org/zap"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 const windowsEventString = "<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Service Control Manager' Guid='{555908d1-a6d7-4695-8e1e-26931d2012f4}' EventSourceName='Service Control Manager'/><EventID Qualifiers='16384'>7036</EventID><Version>0</Version><Level>4</Level><Task>0</Task><Opcode>0</Opcode><Keywords>0x8080000000000000</Keywords><TimeCreated SystemTime='2024-11-08T18:51:13.504187700Z'/><EventRecordID>3562</EventRecordID><Correlation/><Execution ProcessID='604' ThreadID='4792'/><Channel>System</Channel><Computer>WIN-L6PC55MPB98</Computer><Security/></System><EventData><Data Name='param1'>Print Spooler</Data><Data Name='param2'>stopped</Data><Binary>530070006F006F006C00650072002F0031000000</Binary></EventData></Event>"
@@ -244,7 +244,7 @@ func Test_getRawField(t *testing.T) {
 			m := &protoMarshaler{}
 			m.teleSettings.Logger = zap.NewNop()
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			rawField, err := m.getRawField(ctx, tc.field, tc.logRecord, tc.scope, tc.resource)
 			if tc.expectErrStr != "" {
@@ -262,7 +262,7 @@ func Benchmark_getRawField(b *testing.B) {
 	m := &protoMarshaler{}
 	m.teleSettings.Logger = zap.NewNop()
 
-	ctx := context.Background()
+	ctx := b.Context()
 
 	for _, tc := range getRawFieldCases {
 		b.ResetTimer()
@@ -381,7 +381,7 @@ func veryLargeLog() (plog.LogRecord, plog.ScopeLogs, plog.ResourceLogs) {
 
 	// Very large body with many fields
 	logRecord.Body().SetEmptyMap()
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		logRecord.Body().Map().PutStr(fmt.Sprintf("field_%d", i), fmt.Sprintf("value_%d_%s", i, strings.Repeat("x", 100)))
 	}
 	logRecord.Body().Map().PutStr("event_id", "7036")
@@ -394,7 +394,7 @@ func veryLargeLog() (plog.LogRecord, plog.ScopeLogs, plog.ResourceLogs) {
 	logRecord.Attributes().PutStr("log.file.name", "/var/log/containers/agent_agent_ns.log")
 	logRecord.Attributes().PutStr("chronicle_log_type", "WINEVTLOG")
 	logRecord.Attributes().PutStr("chronicle_namespace", "production")
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		logRecord.Attributes().PutStr(fmt.Sprintf("attr_%d", i), fmt.Sprintf("value_%d", i))
 	}
 
@@ -412,7 +412,7 @@ func veryLargeLog() (plog.LogRecord, plog.ScopeLogs, plog.ResourceLogs) {
 	resource.Resource().Attributes().PutStr("service.version", "1.87.4")
 	resource.Resource().Attributes().PutStr("os.type", "linux")
 	resource.Resource().Attributes().PutStr("os.version", "5.15.0")
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		resource.Resource().Attributes().PutStr(fmt.Sprintf("resource_attr_%d", i), fmt.Sprintf("value_%d", i))
 	}
 
@@ -437,7 +437,7 @@ func Benchmark_processLogRecord(b *testing.B) {
 		BatchRequestSizeLimit: 5242880,
 	}
 
-	ctx := context.Background()
+	ctx := b.Context()
 
 	sizes := []struct {
 		name string
@@ -684,7 +684,7 @@ func Test_getLogType(t *testing.T) {
 					scopeLogs := resourceLogs.ScopeLogs().At(j)
 					for k := 0; k < scopeLogs.LogRecords().Len(); k++ {
 						logRecord := scopeLogs.LogRecords().At(k)
-						logType, err := marshaler.getLogType(context.Background(), logRecord, scopeLogs, resourceLogs)
+						logType, err := marshaler.getLogType(t.Context(), logRecord, scopeLogs, resourceLogs)
 						require.NoError(t, err)
 						require.Equal(t, tt.expectedType, logType)
 					}

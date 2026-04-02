@@ -16,8 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/consumer/consumererror"
@@ -29,6 +27,9 @@ import (
 	"golang.org/x/oauth2"
 	grpcgzip "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 const (
@@ -162,7 +163,7 @@ func (exp *chronicleAPIExporter) Start(ctx context.Context, _ component.Host) er
 
 	if exp.cfg.CollectAgentMetrics {
 		f := func(ctx context.Context, request *api.BatchCreateEventsRequest) error {
-			return exp.uploadStatsEvents(ctx, request, string(exp.cfg.CollectorID[:]))
+			return exp.uploadStatsEvents(ctx, request, string(exp.cfg.CollectorID))
 		}
 		metrics, err := newMetricsReporter(exp.cfg, exp.set, exp.exporterID, f)
 		if err != nil {
@@ -189,7 +190,7 @@ func (exp *chronicleAPIExporter) loadLogTypes(ctx context.Context) map[string]st
 	logTypes := make(map[string]struct{})
 	endpoint := getLogTypesEndpoint(exp.cfg)
 
-	request, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, http.NoBody)
 	if err != nil {
 		exp.set.Logger.Warn("Failed to create request for loading log types", zap.Error(err))
 		return nil
@@ -238,12 +239,11 @@ func (exp *chronicleAPIExporter) loadLogTypes(ctx context.Context) map[string]st
 		if response.NextPageToken == "" {
 			break
 		}
-		request, err = http.NewRequestWithContext(ctx, "GET", endpoint+"?pageToken="+response.NextPageToken, nil)
+		request, err = http.NewRequestWithContext(ctx, http.MethodGet, endpoint+"?pageToken="+response.NextPageToken, http.NoBody)
 		if err != nil {
 			exp.set.Logger.Warn("Failed to create request for loading log types", zap.Error(err))
 			return nil
 		}
-
 	}
 	return logTypes
 }
@@ -257,7 +257,6 @@ func (exp *chronicleAPIExporter) loadLogTypes(ctx context.Context) map[string]st
 //
 // we need to get the token after the last /
 func parseLogTypes(logTypes string) string {
-
 	parts := strings.Split(logTypes, "/")
 	return parts[len(parts)-1]
 }
@@ -357,7 +356,7 @@ func (exp *chronicleAPIExporter) uploadToChronicleAPI(ctx context.Context, logs 
 		return err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "POST", httpEndpoint(exp.cfg, logType), body)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, httpEndpoint(exp.cfg, logType), body)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
@@ -465,7 +464,7 @@ func (exp *chronicleAPIExporter) uploadStatsEvents(ctx context.Context, request 
 		return err
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", httpStatsEndpoint(exp.cfg, collectorID), body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, httpStatsEndpoint(exp.cfg, collectorID), body)
 	if err != nil {
 		return fmt.Errorf("create stats request: %w", err)
 	}

@@ -4,13 +4,10 @@
 package googlesecopsexporter
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -18,6 +15,9 @@ import (
 	"go.opentelemetry.io/otel/metric/noop"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
@@ -85,8 +85,8 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				require.Len(t, requests, 1)
 				batch := requests[0].Batch
 				require.Equal(t, "WINEVTLOG", batch.LogType)
-				require.Equal(t, "", batch.Source.Namespace)
-				require.Equal(t, 0, len(batch.Source.Labels))
+				require.Empty(t, batch.Source.Namespace)
+				require.Empty(t, batch.Source.Labels)
 				require.Len(t, batch.Entries, 1)
 
 				// Convert Data (byte slice) to string for comparison
@@ -162,15 +162,15 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 
 				// Collection time gets set to Time.Now() instead of being default 0
 				require.Equal(t, batch.Entries[1].Timestamp.Seconds, ts1)
-				require.NotEqual(t, batch.Entries[1].CollectionTime.Seconds, 0)
+				require.NotEqual(t, 0, batch.Entries[1].CollectionTime.Seconds)
 
 				// Timestamp and collection time get set to their set values
 				require.Equal(t, batch.Entries[2].CollectionTime.Seconds, ts1)
 				require.Equal(t, batch.Entries[2].Timestamp.Seconds, ts2)
 
 				// Collection time and timestamp get set to Time.Now() instead of being default 0
-				require.NotEqual(t, batch.Entries[3].CollectionTime.Seconds, 0)
-				require.NotEqual(t, batch.Entries[3].Timestamp.Seconds, 0)
+				require.NotEqual(t, 0, batch.Entries[3].CollectionTime.Seconds)
+				require.NotEqual(t, 0, batch.Entries[3].Timestamp.Seconds)
 			},
 		},
 		{
@@ -207,7 +207,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				return plog.NewLogs() // No log records added
 			},
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
-				require.Len(t, requests, 0, "Expected no requests due to no log records")
+				require.Empty(t, requests, "Expected no requests due to no log records")
 			},
 		},
 		{
@@ -287,7 +287,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				require.Len(t, batch1.Entries, 1, "Expected one log entries in the batch")
 				require.Equal(t, "First log message", string(batch1.Entries[0].Data))
 				require.Equal(t, "WINEVTLOG", batch1.LogType)
-				require.Equal(t, "", batch1.Source.Namespace)
+				require.Empty(t, batch1.Source.Namespace)
 				// verify batch source labels
 				require.Len(t, batch1.Source.Labels, 2)
 				expectedLabels := map[string]string{
@@ -302,7 +302,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				require.Len(t, batch2.Entries, 1, "Expected one log entries in the batch")
 				require.Equal(t, "Second log message", string(batch2.Entries[0].Data))
 				require.Equal(t, "WINEVTLOG", batch2.LogType)
-				require.Equal(t, "", batch2.Source.Namespace)
+				require.Empty(t, batch2.Source.Namespace)
 				require.Len(t, batch2.Source.Labels, 2)
 				expectedLabels = map[string]string{
 					"key3": "value3",
@@ -465,7 +465,6 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				for _, label := range batch2.Source.Labels {
 					require.Equal(t, expectedLabels[label.Key], label.Value)
 				}
-
 			},
 		},
 
@@ -480,7 +479,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 			logRecords: func() plog.Logs {
 				logs := plog.NewLogs()
 				logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
-				for i := 0; i < 1000; i++ {
+				for range 1000 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr("Log message")
 					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
@@ -520,7 +519,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
 				// create 640 logs with size 8192 bytes each - totalling 5242880 bytes. non-body fields put us over limit
-				for i := 0; i < 640; i++ {
+				for range 640 {
 					record1 := logRecords.AppendEmpty()
 					body := tokenWithLength(8192)
 					record1.Body().SetStr(string(body))
@@ -568,7 +567,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
 				// create 1280 logs with size 8192 bytes each - totalling 5242880 * 2 bytes. non-body fields put us over twice the limit
-				for i := 0; i < 1280; i++ {
+				for range 1280 {
 					record1 := logRecords.AppendEmpty()
 					body := tokenWithLength(8192)
 					record1.Body().SetStr(string(body))
@@ -646,7 +645,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
 				// verify 1 request, with 1 batch
-				require.Len(t, requests, 0, "Expected a zero requests")
+				require.Empty(t, requests, "Expected a zero requests")
 			},
 		},
 		{
@@ -810,7 +809,6 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				for _, label := range batch.Source.Labels {
 					require.Equal(t, expectedLabels[label.Key], label.Value)
 				}
-
 			},
 		},
 		{
@@ -859,7 +857,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 			require.NoError(t, err)
 
 			logs := tt.logRecords()
-			requests, _, err := marshaler.MarshalBackstoryRawLogs(context.Background(), logs)
+			requests, _, err := marshaler.MarshalBackstoryRawLogs(t.Context(), logs)
 			require.NoError(t, err)
 
 			tt.expectations(t, requests)
@@ -891,7 +889,7 @@ func BenchmarkProtoMarshaler_MarshalBackstoryRawLogs(b *testing.B) {
 
 	logs := plog.NewLogs()
 	logRecords := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords()
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		record1 := logRecords.AppendEmpty()
 		record1.Body().SetStr("Log message")
 		record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
@@ -903,7 +901,7 @@ func BenchmarkProtoMarshaler_MarshalBackstoryRawLogs(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		marshaler.startTime = startTime
-		_, _, err := marshaler.MarshalBackstoryRawLogs(context.Background(), logs)
+		_, _, err := marshaler.MarshalBackstoryRawLogs(b.Context(), logs)
 		require.NoError(b, err)
 	}
 }

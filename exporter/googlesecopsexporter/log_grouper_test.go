@@ -6,8 +6,9 @@ package googlesecopsexporter
 import (
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/stretchr/testify/require"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 )
 
 func TestCreateGroupKey(t *testing.T) {
@@ -196,7 +197,7 @@ func TestLogGrouper_Clear(t *testing.T) {
 
 	g.Clear()
 
-	require.Len(t, g.groups, 0)
+	require.Empty(t, g.groups)
 
 	// Verify grouper is still usable after clear
 	g.Add(&api.LogEntry{Data: []byte("log3")}, "ns3", "OKTA", nil)
