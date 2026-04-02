@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/configoptional"
@@ -47,7 +48,7 @@ func newMockHTTPServer(logTypeHandlers map[string]http.HandlerFunc) *mockHTTPSer
 
 type emptyTokenSource struct{}
 
-func (t *emptyTokenSource) Token() (*oauth2.Token, error) {
+func (*emptyTokenSource) Token() (*oauth2.Token, error) {
 	return &oauth2.Token{}, nil
 }
 
@@ -499,10 +500,10 @@ func TestChronicleAPIExporterUploadStatsEvents(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		var receivedBody []byte
 		statsSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			require.Equal(t, "POST", r.Method)
-			require.Equal(t, "application/json", r.Header.Get("Content-Type"))
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 			body, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			receivedBody = body
 			w.WriteHeader(http.StatusOK)
 		}))
@@ -557,7 +558,7 @@ func TestChronicleAPIExporterUploadStatsEvents(t *testing.T) {
 	t.Run("server_error", func(t *testing.T) {
 		statsSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal error"))
+			_, _ = w.Write([]byte("internal error"))
 		}))
 		defer statsSrv.Close()
 
@@ -879,7 +880,7 @@ func TestChronicleAPIExporterTelemetry(t *testing.T) {
 
 			// Create telemetry for testing metrics
 			testTelemetry := componenttest.NewTelemetry()
-			defer testTelemetry.Shutdown(t.Context())
+			defer func() { require.NoError(t, testTelemetry.Shutdown(t.Context())) }()
 
 			f := NewFactory()
 			cfg := f.CreateDefaultConfig().(*Config)

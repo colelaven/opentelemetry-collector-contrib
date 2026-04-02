@@ -129,7 +129,7 @@ func baseEndpoint(cfg *Config) string {
 	return fmt.Sprintf(formatString, hostname, cfg.APIVersion, cfg.ProjectNumber, cfg.Region, cfg.CustomerID)
 }
 
-func (exp *chronicleAPIExporter) Capabilities() consumer.Capabilities {
+func (*chronicleAPIExporter) Capabilities() consumer.Capabilities {
 	return consumer.Capabilities{MutatesData: false}
 }
 
@@ -163,7 +163,7 @@ func (exp *chronicleAPIExporter) Start(ctx context.Context, _ component.Host) er
 
 	if exp.cfg.CollectAgentMetrics {
 		f := func(ctx context.Context, request *api.BatchCreateEventsRequest) error {
-			return exp.uploadStatsEvents(ctx, request, string(exp.cfg.CollectorID))
+			return exp.uploadStatsEvents(ctx, request, exp.cfg.CollectorID)
 		}
 		metrics, err := newMetricsReporter(exp.cfg, exp.set, exp.exporterID, f)
 		if err != nil {
@@ -214,13 +214,13 @@ func (exp *chronicleAPIExporter) loadLogTypes(ctx context.Context) map[string]st
 		var response logTypeResponse
 
 		respBody, err := io.ReadAll(resp.Body)
-		if err := resp.Body.Close(); err != nil {
-			exp.set.Logger.Warn("Failed to close response body for loading log types", zap.Error(err))
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			exp.set.Logger.Warn("Failed to close response body for loading log types", zap.Error(closeErr))
 		}
 
 		if err == nil && resp.StatusCode == http.StatusOK {
-			if err := json.Unmarshal(respBody, &response); err != nil {
-				exp.set.Logger.Warn("Failed to unmarshal response body", zap.Error(err))
+			if unmarshalErr := json.Unmarshal(respBody, &response); unmarshalErr != nil {
+				exp.set.Logger.Warn("Failed to unmarshal response body", zap.Error(unmarshalErr))
 				return nil
 			}
 			for _, logType := range response.LogTypes {

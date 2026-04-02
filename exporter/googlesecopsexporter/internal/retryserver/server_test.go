@@ -14,7 +14,7 @@ import (
 // get is a tiny helper that issues a GET to url and returns the response.
 func get(t *testing.T, url string) *http.Response {
 	t.Helper()
-	resp, err := http.Get(url) //nolint:noctx
+	resp, err := http.Get(url) //nolint:noctx,gosec
 	require.NoError(t, err)
 	return resp
 }

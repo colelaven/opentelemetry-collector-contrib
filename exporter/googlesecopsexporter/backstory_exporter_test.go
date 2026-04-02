@@ -47,12 +47,14 @@ func newMockGRPCServer(t *testing.T, handler mockBatchCreateLogsHandler) (*mockG
 
 	mockServer.srv.RegisterService(&api.IngestionServiceV2_ServiceDesc, mockServer)
 	go func() {
-		require.NoError(t, mockServer.srv.Serve(ln))
+		if err := mockServer.srv.Serve(ln); err != nil {
+			t.Log("gRPC server error:", err)
+		}
 	}()
 	return mockServer, ln.Addr().String()
 }
 
-func (s *mockGRPCServer) BatchCreateEvents(_ context.Context, _ *api.BatchCreateEventsRequest) (*api.BatchCreateEventsResponse, error) {
+func (*mockGRPCServer) BatchCreateEvents(_ context.Context, _ *api.BatchCreateEventsRequest) (*api.BatchCreateEventsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "TODO")
 }
 
@@ -393,7 +395,7 @@ func TestBackstoryAPIExporterTelemetry(t *testing.T) {
 
 			// Create telemetry for testing metrics
 			testTelemetry := componenttest.NewTelemetry()
-			defer testTelemetry.Shutdown(t.Context())
+			defer func() { require.NoError(t, testTelemetry.Shutdown(t.Context())) }()
 
 			// Override the client params for testing to we can connect to the mock server
 			secureGPPCClientParams := grpcClientParams

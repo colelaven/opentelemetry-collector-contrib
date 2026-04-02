@@ -576,10 +576,8 @@ func Test_getLogType(t *testing.T) {
 				RawLogField:           "body",
 				BatchRequestSizeLimit: 5242880,
 			},
-			labels: []*api.Label{},
-			logRecords: func() plog.Logs {
-				return plog.NewLogs() // No log records added
-			},
+			labels:     []*api.Label{},
+			logRecords: plog.NewLogs,
 		},
 		{
 			name: "Log type in chronicle attribute",
@@ -593,7 +591,7 @@ func Test_getLogType(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 			expectedType: "WINEVTLOGS1",

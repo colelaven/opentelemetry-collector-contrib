@@ -203,9 +203,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				RawLogField:           "body",
 				BatchRequestSizeLimit: 5242880,
 			},
-			logRecords: func() plog.Logs {
-				return plog.NewLogs() // No log records added
-			},
+			logRecords: plog.NewLogs,
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
 				require.Empty(t, requests, "Expected no requests due to no log records")
 			},
@@ -238,10 +236,10 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"google_secops.namespace": "test1", `google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"google_secops.namespace": "test1", `google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"google_secops.namespace": "test1", `google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
+				_ = record2.Attributes().FromRaw(map[string]any{"google_secops.namespace": "test1", `google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
@@ -269,10 +267,10 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{`google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{`google_secops.ingestion_label["key1"]`: "value1", `google_secops.ingestion_label["key2"]`: "value2"})
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{`google_secops.ingestion_label["key3"]`: "value3", `google_secops.ingestion_label["key4"]`: "value4"})
+				_ = record2.Attributes().FromRaw(map[string]any{`google_secops.ingestion_label["key3"]`: "value3", `google_secops.ingestion_label["key4"]`: "value4"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
@@ -385,11 +383,11 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
@@ -422,11 +420,11 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS2", "chronicle_namespace": "test2", `chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
+				_ = record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS2", "chronicle_namespace": "test2", `chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
 				return logs
 			},
 
@@ -482,7 +480,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				for range 1000 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr("Log message")
-					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+					_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				}
 				return logs
 			},
@@ -523,7 +521,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 					record1 := logRecords.AppendEmpty()
 					body := tokenWithLength(8192)
 					record1.Body().SetStr(string(body))
-					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+					_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				}
 				return logs
 			},
@@ -571,7 +569,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 					record1 := logRecords.AppendEmpty()
 					body := tokenWithLength(8192)
 					record1.Body().SetStr(string(body))
-					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+					_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				}
 				return logs
 			},
@@ -639,7 +637,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				body := tokenWithLength(5242881)
 				record1.Body().SetStr(string(body))
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 
@@ -699,28 +697,28 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS2", "chronicle_namespace": "test2", `chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
+				_ = record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS2", "chronicle_namespace": "test2", `chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
 
 				record3 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record3.Body().SetStr("Third log message")
-				record3.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS3", "chronicle_namespace": "test3", `chronicle_ingestion_label["key5"]`: "value5", `chronicle_ingestion_label["key6"]`: "value6"})
+				_ = record3.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS3", "chronicle_namespace": "test3", `chronicle_ingestion_label["key5"]`: "value5", `chronicle_ingestion_label["key6"]`: "value6"})
 
 				// these two should be grouped
 				record4 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record4.Body().SetStr("Fourth log message")
-				record4.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS4", "chronicle_namespace": "test4", `chronicle_ingestion_label["key7"]`: "value7", `chronicle_ingestion_label["key8"]`: "value8"})
+				_ = record4.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS4", "chronicle_namespace": "test4", `chronicle_ingestion_label["key7"]`: "value7", `chronicle_ingestion_label["key8"]`: "value8"})
 				record5 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record5.Body().SetStr("Fifth log message")
-				record5.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS4", "chronicle_namespace": "test4", `chronicle_ingestion_label["key7"]`: "value7", `chronicle_ingestion_label["key8"]`: "value8"})
+				_ = record5.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS4", "chronicle_namespace": "test4", `chronicle_ingestion_label["key7"]`: "value7", `chronicle_ingestion_label["key8"]`: "value8"})
 
 				// same log type as record4, but different namespace
 				record6 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record6.Body().SetStr("Sixth log message")
-				record6.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS4", "chronicle_namespace": "test5", `chronicle_ingestion_label["key7"]`: "value7", `chronicle_ingestion_label["key8"]`: "value8"})
+				_ = record6.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS4", "chronicle_namespace": "test5", `chronicle_ingestion_label["key7"]`: "value7", `chronicle_ingestion_label["key8"]`: "value8"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
@@ -828,7 +826,7 @@ func TestProtoMarshaler_MarshalBackstoryRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests []*api.BatchCreateLogsRequest) {
@@ -892,7 +890,7 @@ func BenchmarkProtoMarshaler_MarshalBackstoryRawLogs(b *testing.B) {
 	for range 1000 {
 		record1 := logRecords.AppendEmpty()
 		record1.Body().SetStr("Log message")
-		record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+		_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 	}
 
 	b.ResetTimer()

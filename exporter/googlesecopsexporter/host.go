@@ -31,8 +31,8 @@ func findMACAddress(interfaces func() ([]net.Interface, error)) string {
 		addrs, _ := iface.Addrs()
 		for _, addr := range addrs {
 			address := addr.String()
-			if strings.Contains(address, "/") {
-				address = address[:strings.Index(address, "/")]
+			if idx := strings.Index(address, "/"); idx != -1 {
+				address = address[:idx]
 			}
 			ip := net.ParseIP(address)
 			if ip != nil && ip.To4() != nil && !ip.IsLoopback() && !ip.IsUnspecified() {

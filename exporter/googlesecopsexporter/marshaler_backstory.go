@@ -5,7 +5,6 @@ package googlesecopsexporter
 
 import (
 	"context"
-	"fmt"
 
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
@@ -17,16 +16,13 @@ import (
 
 // MarshalBackstoryRawLogs marshals the logs into backstory API request payloads.
 func (m *protoMarshaler) MarshalBackstoryRawLogs(ctx context.Context, ld plog.Logs) ([]*api.BatchCreateLogsRequest, uint, error) {
-	logGrouper, totalBytes, err := m.extractBackstoryRawLogs(ctx, ld)
-	if err != nil {
-		return nil, 0, fmt.Errorf("extract raw logs: %w", err)
-	}
+	logGrouper, totalBytes := m.extractBackstoryRawLogs(ctx, ld)
 	return m.constructBackstoryPayloads(logGrouper), totalBytes, nil
 }
 
-func (m *protoMarshaler) extractBackstoryRawLogs(ctx context.Context, ld plog.Logs) (*logGrouper, uint, error) {
+func (m *protoMarshaler) extractBackstoryRawLogs(ctx context.Context, ld plog.Logs) (*logGrouper, uint) {
 	logGrouper := newLogGrouper()
-	totalBytes, err := m.forEachLogRecord(ctx, ld, func(p processedLog) {
+	totalBytes := m.forEachLogRecord(ctx, ld, func(p processedLog) {
 		entry := &api.LogEntry{
 			Timestamp:      timestamppb.New(p.timestamp),
 			CollectionTime: timestamppb.New(p.collectionTime),
@@ -42,11 +38,8 @@ func (m *protoMarshaler) extractBackstoryRawLogs(ctx context.Context, ld plog.Lo
 		}
 		logGrouper.Add(entry, p.namespace, p.logType, ingestionLabels)
 	})
-	if err != nil {
-		return nil, 0, err
-	}
 
-	return logGrouper, totalBytes, nil
+	return logGrouper, totalBytes
 }
 
 func (m *protoMarshaler) constructBackstoryPayloads(logGrouper *logGrouper) []*api.BatchCreateLogsRequest {

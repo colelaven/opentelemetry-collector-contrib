@@ -84,7 +84,7 @@ type processedLog struct {
 	data            []byte
 }
 
-func (m *protoMarshaler) forEachLogRecord(ctx context.Context, ld plog.Logs, fn func(p processedLog)) (uint, error) {
+func (m *protoMarshaler) forEachLogRecord(ctx context.Context, ld plog.Logs, fn func(p processedLog)) uint {
 	totalBytes := uint(0)
 	for i := 0; i < ld.ResourceLogs().Len(); i++ {
 		resourceLog := ld.ResourceLogs().At(i)
@@ -117,7 +117,7 @@ func (m *protoMarshaler) forEachLogRecord(ctx context.Context, ld plog.Logs, fn 
 			}
 		}
 	}
-	return totalBytes, nil
+	return totalBytes
 }
 
 func (m *protoMarshaler) processLogRecord(ctx context.Context, logRecord plog.LogRecord, scope plog.ScopeLogs, resource plog.ResourceLogs) (string, string, string, map[string]string, error) {
@@ -133,10 +133,7 @@ func (m *protoMarshaler) processLogRecord(ctx context.Context, logRecord plog.Lo
 	if err != nil {
 		return "", "", "", nil, err
 	}
-	ingestionLabels, err := m.getIngestionLabelsMap(logRecord)
-	if err != nil {
-		return "", "", "", nil, err
-	}
+	ingestionLabels := m.getIngestionLabelsMap(logRecord)
 	return rawLog, logType, namespace, ingestionLabels, nil
 }
 
@@ -177,14 +174,13 @@ func (m *protoMarshaler) getLogType(ctx context.Context, logRecord plog.LogRecor
 	}
 
 	if logType != "" {
-		if m.shouldValidateLogType() {
-			if _, ok := m.logTypes[logType]; ok {
-				return logType, nil
-			}
-			m.logger.Warn("Log type could not be validated", zap.String("logType", logType), zap.String("logTypeField", chronicleLogTypeField))
-		} else {
+		if !m.shouldValidateLogType() {
 			return logType, nil
 		}
+		if _, ok := m.logTypes[logType]; ok {
+			return logType, nil
+		}
+		m.logger.Warn("Log type could not be validated", zap.String("logType", logType), zap.String("logTypeField", chronicleLogTypeField))
 	}
 
 	if m.cfg.DefaultLogType == "" {
@@ -222,18 +218,12 @@ func (m *protoMarshaler) getNamespace(ctx context.Context, logRecord plog.LogRec
 	return m.cfg.Namespace, nil
 }
 
-func (m *protoMarshaler) getIngestionLabelsMap(logRecord plog.LogRecord) (map[string]string, error) {
+func (m *protoMarshaler) getIngestionLabelsMap(logRecord plog.LogRecord) map[string]string {
 	// check for labels in attributes["google_secops.ingestion_labels"]
-	secopsIngestionLabels, err := m.getRawNestedFields(secopsIngestionLabelsPrefix, logRecord)
-	if err != nil {
-		return nil, fmt.Errorf("get secops ingestion labels: %w", err)
-	}
+	secopsIngestionLabels := m.getRawNestedFields(secopsIngestionLabelsPrefix, logRecord)
 
 	// check for labels in attributes["chronicle_ingestion_labels"]
-	chronicleIngestionLabels, err := m.getRawNestedFields(chronicleIngestionLabelsPrefix, logRecord)
-	if err != nil {
-		return nil, fmt.Errorf("get chronicle ingestion labels: %w", err)
-	}
+	chronicleIngestionLabels := m.getRawNestedFields(chronicleIngestionLabelsPrefix, logRecord)
 
 	// merge labels prioritizing secops ingestion labels > chronicle ingestion labels > config ingestion labels
 	mergedLabels := secopsIngestionLabels
@@ -248,7 +238,7 @@ func (m *protoMarshaler) getIngestionLabelsMap(logRecord plog.LogRecord) (map[st
 		}
 	}
 
-	return mergedLabels, nil
+	return mergedLabels
 }
 
 // commonStringFields maps OTTL field expressions to their underlying attribute keys
@@ -331,7 +321,7 @@ func (m *protoMarshaler) getRawField(ctx context.Context, field string, logRecor
 	}
 }
 
-func (m *protoMarshaler) getRawNestedFields(field string, logRecord plog.LogRecord) (map[string]string, error) {
+func (*protoMarshaler) getRawNestedFields(field string, logRecord plog.LogRecord) map[string]string {
 	nestedFields := make(map[string]string)
 	logRecord.Attributes().Range(func(key string, value pcommon.Value) bool {
 		if !strings.HasPrefix(key, field) {
@@ -349,7 +339,7 @@ func (m *protoMarshaler) getRawNestedFields(field string, logRecord plog.LogReco
 		}
 		return true
 	})
-	return nestedFields, nil
+	return nestedFields
 }
 
 func getTimestamp(logRecord plog.LogRecord) time.Time {

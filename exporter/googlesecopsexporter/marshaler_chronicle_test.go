@@ -125,10 +125,8 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				RawLogField:           "body",
 				BatchRequestSizeLimit: 5242880,
 			},
-			labels: []*api.Label{},
-			logRecords: func() plog.Logs {
-				return plog.NewLogs() // No log records added
-			},
+			labels:     []*api.Label{},
+			logRecords: plog.NewLogs,
 			expectations: func(t *testing.T, requests map[string][]*api.ImportLogsRequest) {
 				require.Empty(t, requests, "Expected no requests due to no log records")
 			},
@@ -166,10 +164,10 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record2.Attributes().FromRaw(map[string]any{"chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests map[string][]*api.ImportLogsRequest) {
@@ -197,10 +195,10 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{`chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{`chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{`chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
+				_ = record2.Attributes().FromRaw(map[string]any{`chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests map[string][]*api.ImportLogsRequest) {
@@ -290,11 +288,11 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				return logs
 			},
 			expectations: func(t *testing.T, requests map[string][]*api.ImportLogsRequest) {
@@ -326,11 +324,11 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				logs := plog.NewLogs()
 				record1 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record1.Body().SetStr("First log message")
-				record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+				_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 
 				record2 := logs.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 				record2.Body().SetStr("Second log message")
-				record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS2", "chronicle_namespace": "test2", `chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
+				_ = record2.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS2", "chronicle_namespace": "test2", `chronicle_ingestion_label["key3"]`: "value3", `chronicle_ingestion_label["key4"]`: "value4"})
 				return logs
 			},
 
@@ -377,7 +375,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				for range 1000 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr("First log message")
-					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+					_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				}
 
 				return logs
@@ -417,7 +415,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				for range 640 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr(string(body))
-					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+					_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				}
 
 				return logs
@@ -468,7 +466,7 @@ func TestProtoMarshaler_MarshalChronicleAPIRawLogs(t *testing.T) {
 				for range 1280 {
 					record1 := logRecords.AppendEmpty()
 					record1.Body().SetStr(string(body))
-					record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
+					_ = record1.Attributes().FromRaw(map[string]any{"chronicle_log_type": "WINEVTLOGS1", "chronicle_namespace": "test1", `chronicle_ingestion_label["key1"]`: "value1", `chronicle_ingestion_label["key2"]`: "value2"})
 				}
 
 				return logs

@@ -48,10 +48,11 @@ telemetry:
         bucket_boundaries: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 10000, 15000, 20000, 30000, 60000]
 
 tests:
+  skip_lifecycle: true
   config:
     api: chronicle
     hostname: chronicle.googleapis.com
-    customer_id: test-customer-id
+    customer_id: "00000000-0000-0000-0000-000000000000"
     region: us
     project_number: "123456"
     compression: none

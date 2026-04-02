@@ -154,7 +154,7 @@ func TestLogGrouper_ForEach(t *testing.T) {
 		g.Add(&api.LogEntry{Data: []byte("log2")}, "ns2", "SYSLOG", nil)
 
 		visited := make(map[string]bool)
-		g.ForEach(func(entries []*api.LogEntry, namespace, logType string, ingestionLabels []*api.Label) {
+		g.ForEach(func(_ []*api.LogEntry, namespace, logType string, ingestionLabels []*api.Label) {
 			key := createGroupKey(namespace, logType, ingestionLabels)
 			visited[key] = true
 		})
@@ -171,7 +171,7 @@ func TestLogGrouper_ForEach(t *testing.T) {
 		g.Add(entry1, "ns1", "WINEVTLOG", nil)
 		g.Add(entry2, "ns1", "WINEVTLOG", nil)
 
-		g.ForEach(func(entries []*api.LogEntry, namespace, logType string, ingestionLabels []*api.Label) {
+		g.ForEach(func(entries []*api.LogEntry, _, _ string, _ []*api.Label) {
 			require.Len(t, entries, 2)
 			require.Equal(t, entry1, entries[0])
 			require.Equal(t, entry2, entries[1])
@@ -181,7 +181,7 @@ func TestLogGrouper_ForEach(t *testing.T) {
 	t.Run("no-op on empty grouper", func(t *testing.T) {
 		g := newLogGrouper()
 		called := false
-		g.ForEach(func(entries []*api.LogEntry, namespace, logType string, ingestionLabels []*api.Label) {
+		g.ForEach(func(_ []*api.LogEntry, _, _ string, _ []*api.Label) {
 			called = true
 		})
 		require.False(t, called)

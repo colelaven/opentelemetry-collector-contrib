@@ -73,7 +73,7 @@ func newBackstoryAPIExporter(cfg *Config, params exporter.Settings, telemetry *m
 	}, nil
 }
 
-func (exp *backstoryExporter) Capabilities() consumer.Capabilities {
+func (*backstoryExporter) Capabilities() consumer.Capabilities {
 	return consumer.Capabilities{MutatesData: false}
 }
 
