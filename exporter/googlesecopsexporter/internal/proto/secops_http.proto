@@ -1,10 +1,13 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 // Request message for importing logs.
 
 syntax = "proto3";
 
 package googlesecopsexporter;
 
-option go_package = "github.com/exporter/googlesecopsexporter/proto/api";
+option go_package = "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api";
 
 import "google/protobuf/timestamp.proto";
 

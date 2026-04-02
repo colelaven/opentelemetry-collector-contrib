@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/protos/api"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api"
 	"github.com/shirou/gopsutil/v3/process"
 	"go.opentelemetry.io/collector/component"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"

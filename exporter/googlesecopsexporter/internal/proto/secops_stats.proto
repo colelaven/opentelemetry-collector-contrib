@@ -1,12 +1,13 @@
-// Copyright 2021 Google LLC
-//
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 // Whenever the proto fields are changed here the same change should be copied
 // to the Chronicle Server side proto definition
 syntax = "proto3";
 
 package googlesecopsexporter;
 
-option go_package = "github.com/exporter/googlesecopsexporter/proto/api";
+option go_package = "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/api";
 
 import "google/protobuf/timestamp.proto";
 // Stats about the collection agent.

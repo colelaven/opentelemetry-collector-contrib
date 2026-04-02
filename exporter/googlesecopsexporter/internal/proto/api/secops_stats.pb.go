@@ -1,5 +1,6 @@
-// Copyright 2021 Google LLC
-//
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 // Whenever the proto fields are changed here the same change should be copied
 // to the Chronicle Server side proto definition
 
@@ -401,7 +402,7 @@ const file_secops_stats_proto_rawDesc = "" +
 	"\rrefused_spans\x18\x03 \x01(\x03R\frefusedSpans\x12%\n" +
 	"\x0equeue_capacity\x18\x04 \x01(\x03R\rqueueCapacity\x12\x1d\n" +
 	"\n" +
-	"queue_size\x18\x05 \x01(\x03R\tqueueSizeB4Z2github.com/exporter/googlesecopsexporter/proto/apib\x06proto3"
+	"queue_size\x18\x05 \x01(\x03R\tqueueSizeBlZjgithub.com/open-telemetry/opentelemetry-collector-contrib/exporter/googlesecopsexporter/internal/proto/apib\x06proto3"
 
 var (
 	file_secops_stats_proto_rawDescOnce sync.Once
